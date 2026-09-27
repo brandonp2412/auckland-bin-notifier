@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auckland-bin-notifier"
+version = "0.1.0"
+description = "Auckland Council rubbish and recycling reminders over Matrix"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+keywords = ["auckland", "matrix", "recycling", "rubbish", "waste"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Home Automation",
+]
+dependencies = [
+  "beautifulsoup4>=4.13,<5",
+  "curl-cffi>=0.13,<1",
+  "icalendar>=6,<8",
+  "recurring-ical-events>=3,<4",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+auckland-bin-notifier = "auckland_bin_notifier.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

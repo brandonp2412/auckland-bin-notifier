@@ -1,0 +1,10 @@
+[Unit]
+Description=Check tomorrow's Auckland Council bin collection each evening
+
+[Timer]
+OnCalendar=*-*-* 19:00:00 Pacific/Auckland
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

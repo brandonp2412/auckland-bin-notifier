@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+.serena/
+.env
+.env.*
+config.env
+matrix.env
+*.ics
+state.json
