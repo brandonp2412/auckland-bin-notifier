@@ -60,7 +60,12 @@ Copy the Matrix example:
     cp matrix.env.example ~/.config/auckland-bin-notifier/matrix.env
     chmod 600 ~/.config/auckland-bin-notifier/matrix.env
 
-Set MATRIX_HOMESERVER, MATRIX_ROOM_ID, and MATRIX_ACCESS_TOKEN. Use a dedicated Matrix bot/account where practical. Never commit an access token.
+Set MATRIX_ROOM_ID plus one Matrix transport:
+
+- Direct Client API: set MATRIX_HOMESERVER and MATRIX_ACCESS_TOKEN. This is appropriate for unencrypted rooms.
+- Existing Matrix MCP: install with the matrix-mcp optional extra and set MATRIX_MCP_URL to its Streamable HTTP endpoint. The notifier calls the MCP send_message tool, so encrypted rooms are sent through the MCP's logged-in Matrix client and encryption store.
+
+Never commit an access token.
 
 ## Test
 

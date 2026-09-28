@@ -26,6 +26,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+matrix-mcp = ["mcp>=2,<3"]
 test = ["pytest>=8,<10"]
 
 [project.scripts]
