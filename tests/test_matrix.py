@@ -1,3 +1,7 @@
+from types import SimpleNamespace
+
+import pytest
+
 from auckland_bin_notifier import matrix
 
 
@@ -49,3 +53,51 @@ def test_send_message_uses_direct_api_without_mcp(monkeypatch):
     matrix.send_message("hello", timeout=4.0)
 
     assert calls == [("hello", "!room:example.org", 4.0)]
+
+
+def test_mcp_tool_error_survives_transport_cleanup(monkeypatch):
+    class FakeTransport:
+        async def __aenter__(self):
+            return object(), object()
+
+        async def __aexit__(self, exc_type, exc, traceback):
+            if exc is not None:
+                raise ExceptionGroup("transport cleanup", [exc])
+
+    class FakeSession:
+        def __init__(self, *args):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, traceback):
+            return False
+
+        async def initialize(self):
+            pass
+
+        async def call_tool(self, name, arguments):
+            return SimpleNamespace(
+                is_error=True,
+                content=[SimpleNamespace(text="device is not verified")],
+            )
+
+    def fake_import(name):
+        if name == "mcp":
+            return SimpleNamespace(ClientSession=FakeSession)
+        if name == "mcp.client.streamable_http":
+            return SimpleNamespace(
+                streamable_http_client=lambda url: FakeTransport()
+            )
+        raise ImportError(name)
+
+    monkeypatch.setattr(matrix, "import_module", fake_import)
+
+    with pytest.raises(matrix.MatrixError, match="device is not verified"):
+        matrix._send_via_mcp(
+            "hello",
+            "!room:example.org",
+            "http://127.0.0.1:8000/mcp",
+            timeout=3.0,
+        )

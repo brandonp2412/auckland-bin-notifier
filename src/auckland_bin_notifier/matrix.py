@@ -24,33 +24,34 @@ def _send_via_mcp(body: str, room_id: str, mcp_url: str, timeout: float) -> None
             "MATRIX_MCP_URL is configured but the Matrix MCP client dependency is not installed"
         ) from exc
 
-    async def _send() -> None:
+    async def _send():
         async with streamable_http_client(mcp_url) as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
-                result = await session.call_tool(
+                return await session.call_tool(
                     "send_message",
                     {"room_id": room_id, "body": body},
                 )
-                is_error = bool(
-                    getattr(result, "isError", getattr(result, "is_error", False))
-                )
-                if is_error:
-                    details = " ".join(
-                        str(getattr(part, "text", ""))
-                        for part in getattr(result, "content", [])
-                        if getattr(part, "text", None)
-                    ).strip()
-                    raise MatrixError(
-                        f"Matrix MCP send failed: {details or 'unknown MCP error'}"
-                    )
 
     try:
-        asyncio.run(asyncio.wait_for(_send(), timeout=timeout))
+        result = asyncio.run(asyncio.wait_for(_send(), timeout=timeout))
     except Exception as exc:
         if isinstance(exc, MatrixError):
             raise
         raise MatrixError(f"Matrix MCP send failed: {exc}") from exc
+
+    is_error = bool(
+        getattr(result, "isError", getattr(result, "is_error", False))
+    )
+    if is_error:
+        details = " ".join(
+            str(getattr(part, "text", ""))
+            for part in getattr(result, "content", [])
+            if getattr(part, "text", None)
+        ).strip()
+        raise MatrixError(
+            f"Matrix MCP send failed: {details or 'unknown MCP error'}"
+        )
 
 
 def _send_via_client_api(body: str, room_id: str, timeout: float) -> None:
