@@ -26,17 +26,18 @@ It is unofficial and is not affiliated with or endorsed by Auckland Council.
 
 ## Install
 
-Clone the repository, then create an isolated runtime environment:
+Install uv, then clone the repository and create an isolated runtime environment:
 
-    python3 -m venv ~/.local/share/auckland-bin-notifier/venv
-    ~/.local/share/auckland-bin-notifier/venv/bin/pip install /path/to/auckland-bin-notifier
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    uv venv ~/.local/share/auckland-bin-notifier/venv
+    uv pip install --python ~/.local/share/auckland-bin-notifier/venv/bin/python /path/to/auckland-bin-notifier
     mkdir -p ~/.local/bin
     ln -sf ~/.local/share/auckland-bin-notifier/venv/bin/auckland-bin-notifier ~/.local/bin/auckland-bin-notifier
 
 For development:
 
-    python3 -m venv .venv
-    .venv/bin/pip install -e '.[test]'
+    uv venv .venv
+    uv pip install --python .venv/bin/python -e '.[test]'
     .venv/bin/pytest -q
 
 ## Configure the collection source
