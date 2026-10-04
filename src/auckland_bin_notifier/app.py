@@ -67,11 +67,11 @@ def message_for(kinds: set[str], target: dt.date) -> str:
 
 
 def _fetch_with_retries(target: dt.date, attempts: int = 3) -> set[str]:
-    last_error: Exception | None = None
+    last_error: SourceError | OSError | None = None
     for attempt in range(attempts):
         try:
             return collection_types_for_date(target)
-        except Exception as exc:
+        except (SourceError, OSError) as exc:
             last_error = exc
             if attempt + 1 < attempts:
                 time.sleep(3 * (attempt + 1))

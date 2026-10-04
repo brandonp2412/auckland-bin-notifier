@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 
 from .app import run, run_e2e
+from .matrix import MatrixError
+from .sources import SourceError
 
 
 def load_env_file(path: Path) -> None:
@@ -63,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             run(target, dry_run=args.dry_run)
         return 0
-    except Exception as exc:
+    except (KeyError, MatrixError, OSError, SourceError, ValueError) as exc:
         print(f"auckland-bin-notifier: {exc}", file=sys.stderr)
         return 1
 

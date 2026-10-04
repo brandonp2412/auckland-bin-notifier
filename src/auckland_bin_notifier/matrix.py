@@ -25,13 +25,15 @@ def _send_via_mcp(body: str, room_id: str, mcp_url: str, timeout: float) -> None
         ) from exc
 
     async def _send():
-        async with streamable_http_client(mcp_url) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                return await session.call_tool(
-                    "send_message",
-                    {"room_id": room_id, "body": body},
-                )
+        async with (
+            streamable_http_client(mcp_url) as (read, write),
+            ClientSession(read, write) as session,
+        ):
+            await session.initialize()
+            return await session.call_tool(
+                "send_message",
+                {"room_id": room_id, "body": body},
+            )
 
     try:
         result = asyncio.run(asyncio.wait_for(_send(), timeout=timeout))

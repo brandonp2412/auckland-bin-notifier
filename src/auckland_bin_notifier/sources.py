@@ -119,7 +119,7 @@ def parse_council_html_for_date(html: str, target: dt.date) -> set[str]:
 
     kinds: set[str] = set()
     for paragraph in household.find_all("p", class_="mb-0 lead"):
-        icon = paragraph.find("i", class_=lambda value: value and "acpl-icon" in value)
+        icon = paragraph.find("i", class_=re.compile(r"acpl-icon"))
         if icon is None:
             continue
         kind = next(
@@ -152,7 +152,7 @@ def collection_types_from_ics_url(
     except Exception as exc:
         if cache_path is None or not cache_path.exists():
             raise SourceError(f"could not download calendar: {exc}") from exc
-        age = dt.datetime.now().timestamp() - cache_path.stat().st_mtime
+        age = dt.datetime.now(dt.UTC).timestamp() - cache_path.stat().st_mtime
         if age > 48 * 60 * 60:
             raise SourceError(f"calendar download failed and cache is older than 48 hours: {exc}") from exc
         payload = cache_path.read_bytes()
