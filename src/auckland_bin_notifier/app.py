@@ -7,7 +7,11 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from . import matrix
-from .sources import SourceError, collection_types_from_ics_url, collection_types_from_property
+from .sources import (
+    SourceError,
+    collection_types_from_ics_url,
+    collection_types_from_property,
+)
 from .state import mark_sent, was_sent
 
 TIMEZONE = ZoneInfo("Pacific/Auckland")

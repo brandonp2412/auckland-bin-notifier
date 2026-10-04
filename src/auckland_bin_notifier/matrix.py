@@ -4,9 +4,9 @@ import asyncio
 import json
 import os
 import time
-from importlib import import_module
 import urllib.parse
 import urllib.request
+from importlib import import_module
 
 
 class MatrixError(RuntimeError):
