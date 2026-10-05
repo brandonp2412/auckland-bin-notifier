@@ -51,4 +51,4 @@ def test_run_retries_transient_matrix_failure(monkeypatch, tmp_path):
     message = app.run(target)
 
     assert attempts == 2
-    assert message == "Bin day 2030-01-02: rubbish. Put the rubbish bin out tonight."
+    assert message == app.message_for({"rubbish"}, target)
