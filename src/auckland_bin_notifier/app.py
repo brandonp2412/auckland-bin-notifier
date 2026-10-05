@@ -50,20 +50,30 @@ def collection_types_for_date(target: dt.date) -> set[str]:
 
 def message_for(kinds: set[str], target: dt.date) -> str:
     today = dt.datetime.now(TIMEZONE).date()
-    if target == today + dt.timedelta(days=1):
-        prefix = "Bins are due tomorrow"
-    elif target == today:
-        prefix = "Bin day today"
-    else:
-        prefix = f"Bin day {target.isoformat()}"
+    is_tomorrow = target == today + dt.timedelta(days=1)
 
     if kinds == {"rubbish", "recycling"}:
-        return f"{prefix}: rubbish and recycling. Put both bins out tonight."
+        if is_tomorrow:
+            return "🗑️♻️ Heads up — rubbish + recycling tomorrow. Pop both bins out tonight!"
+        if target == today:
+            return "🗑️♻️ Bin day today — rubbish + recycling!"
+        return f"🗑️♻️ Bin day {target.isoformat()} — rubbish + recycling."
+
     if kinds == {"rubbish"}:
-        return f"{prefix}: rubbish. Put the rubbish bin out tonight."
+        if is_tomorrow:
+            return "🗑️ Heads up — rubbish tomorrow. Pop the bin out tonight!"
+        if target == today:
+            return "🗑️ Rubbish day today!"
+        return f"🗑️ Rubbish day {target.isoformat()}."
+
     if kinds == {"recycling"}:
-        return f"{prefix}: recycling. Put the recycling bin out tonight."
-    return f"{prefix}: {', '.join(sorted(kinds))}."
+        if is_tomorrow:
+            return "♻️ Heads up — recycling tomorrow. Pop the bin out tonight!"
+        if target == today:
+            return "♻️ Recycling day today!"
+        return f"♻️ Recycling day {target.isoformat()}."
+
+    return f"🗑️ Bin day {target.isoformat()} — {', '.join(sorted(kinds))}."
 
 
 def _fetch_with_retries(target: dt.date, attempts: int = 3) -> set[str]:

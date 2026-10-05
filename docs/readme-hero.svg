@@ -13,6 +13,6 @@
 
   <circle cx="94" cy="190" r="18" fill="#3fb950"/>
   <rect x="136" y="146" width="1160" height="132" rx="22" fill="#21262d"/>
-  <text x="168" y="204" class="body">Bins are due tomorrow: rubbish and recycling.</text>
-  <text x="168" y="250" class="body">Put both bins out tonight.</text>
+  <text x="168" y="204" class="body">🗑️♻️ Heads up — rubbish + recycling tomorrow.</text>
+  <text x="168" y="250" class="body">Pop both bins out tonight!</text>
 </svg>
