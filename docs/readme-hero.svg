@@ -1,49 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180" role="img" aria-labelledby="title desc">
-  <title id="title">Auckland Bin Notifier Matrix reminder examples</title>
-  <desc id="desc">Four dark Matrix-style chat window treatments using the notifier's exact production reminder text.</desc>
-  <rect width="1600" height="1180" fill="#0d1117"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420" role="img" aria-labelledby="title desc">
+  <title id="title">Auckland Bin Notifier Matrix reminder</title>
+  <desc id="desc">A single Matrix-style chat message showing the notifier's exact production reminder text.</desc>
+  <rect width="1400" height="420" rx="28" fill="#0d1117"/>
   <style>
-    .title { font: 700 34px system-ui, -apple-system, Segoe UI, sans-serif; fill: #f0f6fc; }
-    .subtitle { font: 18px system-ui, -apple-system, Segoe UI, sans-serif; fill: #8b949e; }
-    .label { font: 700 22px system-ui, -apple-system, Segoe UI, sans-serif; }
-    .body { font: 30px system-ui, -apple-system, Segoe UI, sans-serif; }
+    .label { font: 700 24px system-ui, -apple-system, Segoe UI, sans-serif; fill: #8b949e; }
+    .body { font: 32px system-ui, -apple-system, Segoe UI, sans-serif; fill: #f0f6fc; }
   </style>
-  <text x="70" y="66" class="title">README hero candidates — exact production reminder text</text>
-  <text x="70" y="112" class="subtitle">Bins are due tomorrow: rubbish and recycling. Put both bins out tonight.</text>
 
-  <g transform="translate(70 150)">
-    <rect width="1460" height="210" rx="24" fill="#161b22" stroke="#30363d" stroke-width="2"/>
-    <text x="28" y="48" class="label" fill="#8b949e">A · Minimal Matrix dark</text>
-    <line x1="18" y1="62" x2="1442" y2="62" stroke="#30363d" stroke-width="2"/>
-    <circle cx="52" cy="116" r="16" fill="#3fb950"/>
-    <rect x="86" y="87" width="1340" height="99" rx="22" fill="#21262d"/>
-    <text x="110" y="147" class="body" fill="#f0f6fc">Bins are due tomorrow: rubbish and recycling. Put both bins out tonight.</text>
-  </g>
+  <rect x="36" y="36" width="1328" height="348" rx="24" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="72" y="88" class="label">Matrix</text>
+  <line x1="60" y1="112" x2="1340" y2="112" stroke="#30363d" stroke-width="2"/>
 
-  <g transform="translate(70 400)">
-    <rect width="1460" height="210" rx="24" fill="#111827" stroke="#30363d" stroke-width="2"/>
-    <text x="28" y="48" class="label" fill="#9ca3af">B · Softer rounded chat</text>
-    <line x1="18" y1="62" x2="1442" y2="62" stroke="#30363d" stroke-width="2"/>
-    <circle cx="52" cy="116" r="16" fill="none" stroke="#8b949e" stroke-width="2"/>
-    <rect x="86" y="87" width="1340" height="99" rx="22" fill="#1f2937"/>
-    <text x="110" y="147" class="body" fill="#f9fafb">Bins are due tomorrow: rubbish and recycling. Put both bins out tonight.</text>
-  </g>
-
-  <g transform="translate(70 650)">
-    <rect width="1460" height="210" rx="24" fill="#0b0f14" stroke="#30363d" stroke-width="2"/>
-    <text x="28" y="48" class="label" fill="#7d8590">C · Compact desktop crop</text>
-    <line x1="18" y1="62" x2="1442" y2="62" stroke="#30363d" stroke-width="2"/>
-    <circle cx="52" cy="116" r="16" fill="#3fb950"/>
-    <rect x="78" y="92" width="1348" height="94" rx="12" fill="#17202b"/>
-    <text x="102" y="149" class="body" fill="#e6edf3">Bins are due tomorrow: rubbish and recycling. Put both bins out tonight.</text>
-  </g>
-
-  <g transform="translate(70 900)">
-    <rect width="1460" height="210" rx="24" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
-    <text x="28" y="48" class="label" fill="#9da7b1">D · High-contrast README hero</text>
-    <line x1="18" y1="62" x2="1442" y2="62" stroke="#30363d" stroke-width="2"/>
-    <circle cx="52" cy="116" r="16" fill="#58a6ff"/>
-    <rect x="86" y="87" width="1340" height="99" rx="22" fill="#30363d"/>
-    <text x="110" y="147" class="body" fill="#ffffff">Bins are due tomorrow: rubbish and recycling. Put both bins out tonight.</text>
-  </g>
+  <circle cx="94" cy="190" r="18" fill="#3fb950"/>
+  <rect x="136" y="146" width="1160" height="132" rx="22" fill="#21262d"/>
+  <text x="168" y="204" class="body">Bins are due tomorrow: rubbish and recycling.</text>
+  <text x="168" y="250" class="body">Put both bins out tonight.</text>
 </svg>
