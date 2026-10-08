@@ -89,6 +89,20 @@ def _fetch_with_retries(target: dt.date, attempts: int = 3) -> set[str]:
     raise last_error
 
 
+def _send_with_retries(message: str, attempts: int = 3) -> None:
+    last_error: matrix.MatrixError | None = None
+    for attempt in range(attempts):
+        try:
+            matrix.send_message(message)
+            return
+        except matrix.MatrixError as exc:
+            last_error = exc
+            if attempt + 1 < attempts:
+                time.sleep(3 * (attempt + 1))
+    assert last_error is not None
+    raise last_error
+
+
 def default_target_date() -> dt.date:
     return dt.datetime.now(TIMEZONE).date() + dt.timedelta(days=1)
 
@@ -114,10 +128,11 @@ def run(target: dt.date | None = None, *, dry_run: bool = False) -> str:
         print(f"DRY RUN: {message}")
         return message
 
-    matrix.send_message(message)
+    _send_with_retries(message)
     mark_sent(path, fingerprint)
     print(f"Sent Matrix notification: {message}")
     return message
+
 
 def e2e_message_for(kinds: set[str], target: dt.date) -> str:
     if kinds == {"rubbish", "recycling"}:
@@ -138,6 +153,6 @@ def run_e2e(target: dt.date | None = None) -> str:
     target = target or default_target_date()
     kinds = _fetch_with_retries(target)
     message = e2e_message_for(kinds, target)
-    matrix.send_message(message)
+    _send_with_retries(message)
     print(f"Sent E2E Matrix test: {message}")
     return message
