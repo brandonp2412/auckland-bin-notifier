@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420" role="img" aria-labelledby="title desc">
+  <title id="title">Auckland Bin Notifier Matrix reminder</title>
+  <desc id="desc">A single Matrix-style chat message showing the notifier's exact production reminder text.</desc>
+  <rect width="1400" height="420" rx="28" fill="#0d1117"/>
+  <style>
+    .label { font: 700 24px system-ui, -apple-system, Segoe UI, sans-serif; fill: #8b949e; }
+    .body { font: 32px system-ui, -apple-system, Segoe UI, sans-serif; fill: #f0f6fc; }
+  </style>
+
+  <rect x="36" y="36" width="1328" height="348" rx="24" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="72" y="88" class="label">Matrix</text>
+  <line x1="60" y1="112" x2="1340" y2="112" stroke="#30363d" stroke-width="2"/>
+
+  <circle cx="94" cy="190" r="18" fill="#3fb950"/>
+  <rect x="136" y="146" width="1160" height="132" rx="22" fill="#21262d"/>
+  <text x="168" y="204" class="body">🗑️♻️ Heads up — rubbish + recycling tomorrow.</text>
+  <text x="168" y="250" class="body">Pop both bins out tonight!</text>
+</svg>

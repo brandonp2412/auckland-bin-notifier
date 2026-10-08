@@ -1,5 +1,7 @@
 # Auckland Bin Notifier
 
+![Matrix-style Auckland Bin Notifier reminder](docs/readme-hero.svg)
+
 A small open-source service that checks Auckland Council household collection data and sends a Matrix reminder the evening before rubbish or recycling is due.
 
 It is unofficial and is not affiliated with or endorsed by Auckland Council.
