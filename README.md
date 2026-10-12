@@ -17,7 +17,7 @@ It is unofficial and is not affiliated with or endorsed by Auckland Council.
 - Handles the Council site's browser-like TLS requirements with curl-cffi.
 - Deduplicates real reminders by date and collection type.
 - Retries at 7:10 and 7:25 PM; optional 7:30 AM catch-up checks today, without duplicates.
-- Includes a live --e2e-test mode that does not consume the real reminder.
+- Includes a live `--e2e-test` mode routed to an independent, owner-only encrypted test room; does not consume the real reminder.
 - Ignores food-scraps collections by design.
 
 ## Requirements
@@ -88,11 +88,17 @@ Check the configured live source without sending a message:
 
     auckland-bin-notifier --dry-run
 
+Provision a dedicated private encrypted test room (no invitations, avatar included), using the SDK session configured above:
+
+    python -m auckland_bin_notifier.matrix_test_room
+
+This records the separate `MATRIX_E2E_TEST_ROOM_ID` in your private `config.env`; it never changes `MATRIX_ROOM_ID`, which remains the production destination. The command is safe to re-run against that configured room.
+
 Run the full live source -> parser -> Matrix path without changing reminder state:
 
     auckland-bin-notifier --e2e-test
 
-A successful E2E message is clearly marked as a test and will not prevent the scheduled reminder from being sent later.
+**Tests fail closed** if the dedicated room is unset or equals the production room. Test messages are sent only to the private lab room and never suppress the real scheduled reminder. The room must be encrypted, and membership is verified to contain only the configured account at provisioning time.
 
 You can also check a specific date:
 

@@ -159,3 +159,15 @@ def test_send_message_uses_sdk_when_selected(monkeypatch):
     monkeypatch.setattr(matrix, "_send_via_mcp", lambda *args: (_ for _ in ()).throw(AssertionError("MCP used")))
     matrix.send_message("hello", timeout=5.0)
     assert observed == [("hello", 5.0)]
+
+
+def test_sdk_room_override_does_not_change_production_target(monkeypatch):
+    from auckland_bin_notifier import nio_transport
+
+    observed = []
+    monkeypatch.setenv("MATRIX_TRANSPORT", "nio")
+    monkeypatch.setenv("MATRIX_ROOM_ID", "!production:matrix.example.org")
+    monkeypatch.setattr(nio_transport, "send_message", lambda body, *, timeout, room_id: observed.append((body, timeout, room_id)))
+    matrix.send_message("test-only", timeout=5, room_id="!lab:matrix.example.org")
+    assert observed == [("test-only", 5, "!lab:matrix.example.org")]
+    assert __import__("os").environ["MATRIX_ROOM_ID"] == "!production:matrix.example.org"

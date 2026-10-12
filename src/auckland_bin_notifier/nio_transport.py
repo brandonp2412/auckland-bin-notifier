@@ -97,12 +97,12 @@ async def send_async(
         await client.close()
 
 
-def send_message(body: str, *, timeout: float = 30.0) -> str:
+def send_message(body: str, *, timeout: float = 30.0, room_id: str | None = None) -> str:
     try:
         user_id = os.environ["MATRIX_USER_ID"]
         device_id = os.environ["MATRIX_DEVICE_ID"]
         access_token = os.environ["MATRIX_ACCESS_TOKEN"]
-        room_id = os.environ["MATRIX_ROOM_ID"]
+        target_room = room_id if room_id is not None else os.environ["MATRIX_ROOM_ID"]
         homeserver = os.environ["MATRIX_HOMESERVER"]
         store_path = Path(os.environ["MATRIX_SDK_STORE_PATH"]).expanduser()
     except KeyError as exc:
@@ -113,7 +113,7 @@ def send_message(body: str, *, timeout: float = 30.0) -> str:
                 send_async(
                     body,
                     homeserver=homeserver,
-                    room_id=room_id,
+                    room_id=target_room,
                     user_id=user_id,
                     device_id=device_id,
                     access_token=access_token,

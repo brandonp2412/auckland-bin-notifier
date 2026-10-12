@@ -57,3 +57,35 @@ def test_run_retries_transient_matrix_failure(monkeypatch, tmp_path):
 
     assert attempts == 2
     assert message == app.message_for({"rubbish"}, target)
+
+
+def test_e2e_sends_only_to_distinct_test_room(monkeypatch):
+    monkeypatch.setenv("MATRIX_E2E_TEST_ROOM_ID", "!test:matrix.example.org")
+    monkeypatch.setenv("MATRIX_ROOM_ID", "!production:matrix.example.org")
+    monkeypatch.setattr(app, "_fetch_with_retries", lambda _date: {"rubbish"})
+    calls = []
+    monkeypatch.setattr(
+        app, "_send_with_retries",
+        lambda message, *, room_id: calls.append((message, room_id)),
+    )
+    app.run_e2e(dt.date(2030, 1, 2))
+    assert len(calls) == 1
+    assert "E2E test" in calls[0][0]
+    assert calls[0][1] == "!test:matrix.example.org"
+
+
+def test_e2e_refuses_production_or_missing_room(monkeypatch):
+    import pytest
+
+    monkeypatch.setenv("MATRIX_ROOM_ID", "!production:matrix.example.org")
+    monkeypatch.setattr(app, "_fetch_with_retries", lambda _date: {"rubbish"})
+    monkeypatch.setattr(
+        app, "_send_with_retries",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("A send was attempted")),
+    )
+    monkeypatch.delenv("MATRIX_E2E_TEST_ROOM_ID", raising=False)
+    with pytest.raises(app.matrix.MatrixError, match="must be configured"):
+        app.run_e2e(dt.date(2030, 1, 2))
+    monkeypatch.setenv("MATRIX_E2E_TEST_ROOM_ID", "!production:matrix.example.org")
+    with pytest.raises(app.matrix.MatrixError, match="must differ"):
+        app.run_e2e(dt.date(2030, 1, 2))

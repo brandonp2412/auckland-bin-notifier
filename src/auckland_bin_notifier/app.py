@@ -89,11 +89,16 @@ def _fetch_with_retries(target: dt.date, attempts: int = 3) -> set[str]:
     raise last_error
 
 
-def _send_with_retries(message: str, attempts: int = 3) -> None:
+def _send_with_retries(
+    message: str, attempts: int = 3, *, room_id: str | None = None
+) -> None:
     last_error: matrix.MatrixError | None = None
     for attempt in range(attempts):
         try:
-            matrix.send_message(message)
+            if room_id is None:
+                matrix.send_message(message)
+            else:
+                matrix.send_message(message, room_id=room_id)
             return
         except matrix.MatrixError as exc:
             last_error = exc
@@ -155,7 +160,15 @@ def e2e_message_for(kinds: set[str], target: dt.date) -> str:
 def run_e2e(target: dt.date | None = None) -> str:
     target = target or default_target_date()
     kinds = _fetch_with_retries(target)
+    room_id = os.environ.get("MATRIX_E2E_TEST_ROOM_ID", "").strip()
+    if not room_id or not room_id.startswith("!") or ":" not in room_id:
+        raise matrix.MatrixError(
+            "MATRIX_E2E_TEST_ROOM_ID must be configured; refusing to send a test "
+            "to the production Matrix room"
+        )
+    if room_id == os.environ.get("MATRIX_ROOM_ID"):
+        raise matrix.MatrixError("Test room must differ from the production room")
     message = e2e_message_for(kinds, target)
-    _send_with_retries(message)
-    print(f"Sent E2E Matrix test: {message}")
+    _send_with_retries(message, room_id=room_id)
+    print(f"Sent E2E Matrix test to {room_id}: {message}")
     return message
