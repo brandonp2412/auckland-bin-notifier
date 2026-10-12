@@ -101,3 +101,50 @@ def test_mcp_tool_error_survives_transport_cleanup(monkeypatch):
             "http://127.0.0.1:8000/mcp",
             timeout=3.0,
         )
+
+
+def test_mcp_requires_confirmed_event_and_explicit_opt_in(monkeypatch):
+    class FakeTransport:
+        async def __aenter__(self):
+            return object(), object()
+
+        async def __aexit__(self, exc_type, exc, traceback):
+            return False
+
+    class FakeSession:
+        arguments = None
+        payload = '{"event_id": "$success:example.org"}'
+
+        def __init__(self, *args):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, traceback):
+            return False
+
+        async def initialize(self):
+            pass
+
+        async def call_tool(self, name, arguments):
+            FakeSession.arguments = arguments
+            return SimpleNamespace(is_error=False, content=[SimpleNamespace(text=FakeSession.payload)])
+
+    def fake_import(name):
+        if name == "mcp":
+            return SimpleNamespace(ClientSession=FakeSession)
+        if name == "mcp.client.streamable_http":
+            return SimpleNamespace(streamable_http_client=lambda url: FakeTransport())
+        raise ImportError(name)
+
+    monkeypatch.setattr(matrix, "import_module", fake_import)
+    monkeypatch.setenv("MATRIX_IGNORE_UNVERIFIED_DEVICES", "true")
+    matrix._send_via_mcp("Bin day", "!r:x", "http://127.0.0.1:18116/mcp", 2.0)
+    assert FakeSession.arguments == {
+        "room_id": "!r:x", "body": "Bin day", "ignore_unverified_devices": True,
+    }
+
+    FakeSession.payload = '{"error": "Device unverified"}'
+    with pytest.raises(matrix.MatrixError, match="did not confirm delivery"):
+        matrix._send_via_mcp("Bin day", "!r:x", "http://127.0.0.1:18116/mcp", 2.0)

@@ -16,6 +16,7 @@ It is unofficial and is not affiliated with or endorsed by Auckland Council.
 - Falls back to the live household collection cards when no calendar link is available.
 - Handles the Council site's browser-like TLS requirements with curl-cffi.
 - Deduplicates real reminders by date and collection type.
+- Retries at 7:10 and 7:25 PM; optional 7:30 AM catch-up checks today, without duplicates.
 - Includes a live --e2e-test mode that does not consume the real reminder.
 - Ignores food-scraps collections by design.
 
@@ -68,6 +69,8 @@ Set MATRIX_ROOM_ID plus one Matrix transport:
 - Direct Client API: set MATRIX_HOMESERVER and MATRIX_ACCESS_TOKEN. This is appropriate for unencrypted rooms.
 - Existing Matrix MCP: install with the matrix-mcp optional extra and set MATRIX_MCP_URL to its Streamable HTTP endpoint. The notifier calls the MCP send_message tool, so encrypted rooms are sent through the MCP's logged-in Matrix client and encryption store.
 
+For encrypted rooms where the sending Matrix session has unverified devices, you can set `MATRIX_IGNORE_UNVERIFIED_DEVICES=true` for the notifier. Messages remain encrypted, but Matrix will share encryption keys with unverified devices, which is a security tradeoff. The default remains strict.
+
 Never commit an access token.
 
 ## Test
@@ -93,10 +96,11 @@ Install the user units:
     mkdir -p ~/.config/systemd/user
     cp systemd/auckland-bin-notifier.service ~/.config/systemd/user/
     cp systemd/auckland-bin-notifier.timer ~/.config/systemd/user/
+    cp systemd/auckland-bin-notifier-catchup.* ~/.config/systemd/user/
     systemctl --user daemon-reload
-    systemctl --user enable --now auckland-bin-notifier.timer
+    systemctl --user enable --now auckland-bin-notifier.timer auckland-bin-notifier-catchup.timer
 
-The timer runs at 7:00 PM in Pacific/Auckland and checks the following day's collection. It is persistent across reboots.
+The evening timer checks tomorrow at 7:00, 7:10 and 7:25 PM Pacific/Auckland; only the first successful send is delivered. The catch-up timer checks today at 7:30 AM and only sends when the previous evening's message was missed. Both are persistent across reboots.
 
 Inspect it with:
 

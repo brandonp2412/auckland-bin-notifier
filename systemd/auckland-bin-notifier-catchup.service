@@ -1,0 +1,13 @@
+[Unit]
+Description=Auckland bin-day missed reminder recovery
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=AUCKLAND_BIN_CHECK_TODAY=1
+Type=oneshot
+EnvironmentFile=%h/.config/auckland-bin-notifier/matrix.env
+EnvironmentFile=%h/.config/auckland-bin-notifier/config.env
+ExecStart=%h/.local/bin/auckland-bin-notifier
+NoNewPrivileges=true
+PrivateTmp=true

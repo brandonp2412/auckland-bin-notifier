@@ -104,7 +104,10 @@ def _send_with_retries(message: str, attempts: int = 3) -> None:
 
 
 def default_target_date() -> dt.date:
-    return dt.datetime.now(TIMEZONE).date() + dt.timedelta(days=1)
+    today = dt.datetime.now(TIMEZONE).date()
+    if os.environ.get("AUCKLAND_BIN_CHECK_TODAY") == "1":
+        return today
+    return today + dt.timedelta(days=1)
 
 
 def run(target: dt.date | None = None, *, dry_run: bool = False) -> str:

@@ -8,6 +8,11 @@ def test_default_target_is_tomorrow():
     assert app.default_target_date() == today + dt.timedelta(days=1)
 
 
+def test_morning_catchup_targets_today(monkeypatch):
+    monkeypatch.setenv("AUCKLAND_BIN_CHECK_TODAY", "1")
+    assert app.default_target_date() == dt.datetime.now(app.TIMEZONE).date()
+
+
 def test_tomorrow_messages_are_casual_and_use_collection_emojis():
     tomorrow = dt.datetime.now(app.TIMEZONE).date() + dt.timedelta(days=1)
 
