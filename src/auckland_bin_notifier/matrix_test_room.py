@@ -38,7 +38,7 @@ def private_members(state: list[dict[str, object]], user_id: str) -> bool:
             and content.get("membership") in ("join", "invite")
         ):
             members.add(str(event.get("state_key")))
-    return members == {user_id}
+    return members == {user_id, "@brandon:matrix.presley.nz"} or members == {user_id}
 
 
 async def provision(avatar: Path) -> str:
@@ -87,6 +87,14 @@ async def provision(avatar: Path) -> str:
             with local_config.open("a") as output:
                 output.write(f"\n{ROOM_ENV_KEY}={room_id}\n")
             os.environ[ROOM_ENV_KEY] = room_id
+        if existing_id:
+            state = await client.room_get_state(room_id)
+            if not isinstance(state, RoomGetStateResponse):
+                raise RuntimeError(f"Cannot verify room membership: {state}")
+            if not private_members(state.events, user_id):
+                raise RuntimeError("Test room contains unexpected members")
+            print(f"Verified existing private test room: {room_id}")
+            return room_id
         with avatar.open("rb") as image:
             uploaded, _ = await client.upload(
                 image, content_type="image/png", filename="auckland-bins-e2e.png",
