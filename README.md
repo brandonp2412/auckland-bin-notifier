@@ -67,9 +67,18 @@ Copy the Matrix example:
 Set MATRIX_ROOM_ID plus one Matrix transport:
 
 - Direct Client API: set MATRIX_HOMESERVER and MATRIX_ACCESS_TOKEN. This is appropriate for unencrypted rooms.
-- Existing Matrix MCP: install with the matrix-mcp optional extra and set MATRIX_MCP_URL to its Streamable HTTP endpoint. The notifier calls the MCP send_message tool, so encrypted rooms are sent through the MCP's logged-in Matrix client and encryption store.
+- Direct encrypted SDK (recommended): run `auckland-bin-matrix-login` once on Nox to create a **separate Matrix device** with its own encryption store. The systemd units automatically load the resulting private `matrix-sdk.env` file, and future sends use `matrix-nio` without MCP. It prompts for your Matrix password just once; only the resulting device token is saved, with file permissions `0600`.
+- Existing Matrix MCP (compatibility): configure `MATRIX_MCP_URL` to its Streamable HTTP endpoint. This remains active until the dedicated SDK device is provisioned.
+- Direct Client API: `MATRIX_HOMESERVER` and `MATRIX_ACCESS_TOKEN`, intended for unencrypted rooms.
 
-For encrypted rooms where the sending Matrix session has unverified devices, you can set `MATRIX_IGNORE_UNVERIFIED_DEVICES=true` for the notifier. Messages remain encrypted, but Matrix will share encryption keys with unverified devices, which is a security tradeoff. The default remains strict.
+For encrypted rooms where the sending Matrix session has unverified devices, you can set `MATRIX_IGNORE_UNVERIFIED_DEVICES=true` for the notifier. The SDK transport checks that the room is encrypted before sending and requires a confirmed event ID. Never copy the live MCP client's device ID, access token *and* Olm store into an independently running client: two concurrent processes cannot safely share a Matrix encryption identity.  Messages remain encrypted, but Matrix will share encryption keys with unverified devices, which is a security tradeoff. The default remains strict.
+
+To create the independent SDK session on the Nox installation:
+
+    cd ~/auckland-bin-notifier
+    uv run auckland-bin-matrix-login
+
+It creates `~/.config/auckland-bin-notifier/matrix-sdk.env` and a private store under `~/.local/state/auckland-bin-notifier/matrix-sdk`. Both scheduled services read the SDK configuration when present; they otherwise retain the proven legacy sending route. Run `auckland-bin-notifier --e2e-test` after provisioning to validate actual encrypted delivery, without consuming a scheduled reminder.
 
 Never commit an access token.
 

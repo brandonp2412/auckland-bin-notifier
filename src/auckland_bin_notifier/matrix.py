@@ -92,7 +92,19 @@ def _send_via_client_api(body: str, room_id: str, timeout: float) -> None:
         raise MatrixError(f"Matrix send failed: {exc}") from exc
 
 
-def send_message(body: str, timeout: float = 15.0) -> None:
+def send_message(body: str, timeout: float = 30.0) -> None:
+    transport = os.environ.get("MATRIX_TRANSPORT", "").strip().lower()
+    if transport == "nio":
+        from .nio_transport import NioTransportError
+        from .nio_transport import send_message as nio_send
+
+        try:
+            nio_send(body, timeout=timeout)
+        except NioTransportError as exc:
+            raise MatrixError(str(exc)) from exc
+        return
+    if transport and transport != "legacy":
+        raise MatrixError(f"Unknown MATRIX_TRANSPORT: {transport}")
     room_id = os.environ["MATRIX_ROOM_ID"]
     mcp_url = os.environ.get("MATRIX_MCP_URL", "").strip()
     if mcp_url:

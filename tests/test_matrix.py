@@ -148,3 +148,14 @@ def test_mcp_requires_confirmed_event_and_explicit_opt_in(monkeypatch):
     FakeSession.payload = '{"error": "Device unverified"}'
     with pytest.raises(matrix.MatrixError, match="did not confirm delivery"):
         matrix._send_via_mcp("Bin day", "!r:x", "http://127.0.0.1:18116/mcp", 2.0)
+
+
+def test_send_message_uses_sdk_when_selected(monkeypatch):
+    from auckland_bin_notifier import nio_transport
+
+    observed = []
+    monkeypatch.setenv("MATRIX_TRANSPORT", "nio")
+    monkeypatch.setattr(nio_transport, "send_message", lambda body, timeout: observed.append((body, timeout)))
+    monkeypatch.setattr(matrix, "_send_via_mcp", lambda *args: (_ for _ in ()).throw(AssertionError("MCP used")))
+    matrix.send_message("hello", timeout=5.0)
+    assert observed == [("hello", 5.0)]
