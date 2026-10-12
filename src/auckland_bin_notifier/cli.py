@@ -11,7 +11,7 @@ from .matrix import MatrixError
 from .sources import SourceError
 
 
-def load_env_file(path: Path) -> None:
+def load_env_file(path: Path, *, override: bool = False) -> None:
     try:
         lines = path.read_text().splitlines()
     except FileNotFoundError:
@@ -21,7 +21,12 @@ def load_env_file(path: Path) -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        name = key.strip()
+        parsed = value.strip().strip('"').strip("'")
+        if override:
+            os.environ[name] = parsed
+        else:
+            os.environ.setdefault(name, parsed)
 
 
 def load_default_env() -> None:
@@ -32,6 +37,9 @@ def load_default_env() -> None:
         config_dir / "config.env",
     ):
         load_env_file(path)
+    # The dedicated SDK device takes priority over legacy MCP credentials
+    # for both interactive CLI commands and systemd-initiated jobs.
+    load_env_file(config_dir / "matrix-sdk.env", override=True)
 
 
 def main(argv: list[str] | None = None) -> int:
