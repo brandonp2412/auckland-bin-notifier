@@ -15,7 +15,12 @@ cp config.env.example ~/.config/auckland-bin-notifier/config.env
 cp matrix.env.example ~/.config/auckland-bin-notifier/matrix.env
 ```
 
-Set `AUCKLAND_BIN_PROPERTY_ID` (11 digits) or `AUCKLAND_BIN_ICS_URL` in `config.env`, and `MATRIX_ROOM_ID` in `matrix.env`. For encrypted rooms, run `auckland-bin-matrix-login`; for unencrypted rooms, set `MATRIX_HOMESERVER` and `MATRIX_ACCESS_TOKEN`.
+Choose one source in `config.env`:
+
+- `AUCKLAND_BIN_PROPERTY_ID`: [find your address on Auckland Council's site](https://www.aucklandcouncil.govt.nz/en/rubbish-recycling.html); copy the 11 digits before `.html` in the property's URL.
+- `AUCKLAND_BIN_ICS_URL`: paste a direct `.ics` or `webcal://` bin-calendar subscription URL, if you have one (not a PDF). Otherwise use the property ID.
+
+Set `MATRIX_ROOM_ID` in `matrix.env`. For encrypted rooms, run `auckland-bin-matrix-login`; for unencrypted rooms, set `MATRIX_HOMESERVER` and `MATRIX_ACCESS_TOKEN`.
 
 ```sh
 auckland-bin-notifier --dry-run
