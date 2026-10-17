@@ -1,5 +1,7 @@
 # Auckland Bin Notifier
 
+![Matrix-style Auckland Bin Notifier reminder](docs/readme-hero.svg)
+
 Matrix reminders for Auckland Council rubbish and recycling collections. Supports property-specific collection pages or iCalendar feeds. Unofficial; not affiliated with Auckland Council.
 
 ## Setup
