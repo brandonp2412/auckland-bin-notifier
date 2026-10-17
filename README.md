@@ -1,138 +1,31 @@
 # Auckland Bin Notifier
 
-![Matrix-style Auckland Bin Notifier reminder](docs/readme-hero.svg)
+Matrix reminders for Auckland Council rubbish and recycling collections. Supports property-specific collection pages or iCalendar feeds. Unofficial; not affiliated with Auckland Council.
 
-A small open-source service that checks Auckland Council household collection data and sends a Matrix reminder the evening before rubbish or recycling is due.
+## Setup
 
-It is unofficial and is not affiliated with or endorsed by Auckland Council.
+Requires Python 3.11+, [uv](https://docs.astral.sh/uv/), Linux/systemd, and a Matrix account.
 
-## Features
+```sh
+git clone https://github.com/brandonp2412/auckland-bin-notifier.git
+cd auckland-bin-notifier
+uv tool install .
+mkdir -p ~/.config/auckland-bin-notifier ~/.config/systemd/user
+cp config.env.example ~/.config/auckland-bin-notifier/config.env
+cp matrix.env.example ~/.config/auckland-bin-notifier/matrix.env
+```
 
-- Checks the next day's rubbish and recycling schedule.
-- Sends one Matrix reminder at 7:00 PM Pacific/Auckland.
-- Supports direct iCalendar/webcal feeds, including recurring events.
-- Supports Auckland Council property-specific collection pages.
-- Prefers an official ICS link if one is exposed by the property page.
-- Falls back to the live household collection cards when no calendar link is available.
-- Handles the Council site's browser-like TLS requirements with curl-cffi.
-- Deduplicates real reminders by date and collection type.
-- Retries at 7:10 and 7:25 PM; optional 7:30 AM catch-up checks today, without duplicates.
-- Includes a live `--e2e-test` mode routed to an independent, owner-only encrypted test room; does not consume the real reminder.
-- Ignores food-scraps collections by design.
+Set `AUCKLAND_BIN_PROPERTY_ID` (11 digits) or `AUCKLAND_BIN_ICS_URL` in `config.env`, and `MATRIX_ROOM_ID` in `matrix.env`. For encrypted rooms, run `auckland-bin-matrix-login`; for unencrypted rooms, set `MATRIX_HOMESERVER` and `MATRIX_ACCESS_TOKEN`.
 
-## Requirements
+```sh
+auckland-bin-notifier --dry-run
+cp systemd/*.service systemd/*.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now auckland-bin-notifier.timer auckland-bin-notifier-catchup.timer
+```
 
-- Python 3.11+
-- Linux with systemd for the included timer/service
-- A Matrix account with permission to post to the target room
-- Either an Auckland Council property ID or an iCalendar URL
+Checks at 7:00, 7:10 and 7:25 PM (Pacific/Auckland), with a 7:30 AM catch-up if the reminder was missed. Duplicate reminders are suppressed; food scraps are excluded.
 
-## Install
+For a live Matrix test without affecting reminders, provision a separate encrypted test room with `uv run python -m auckland_bin_notifier.matrix_test_room`, then run `auckland-bin-notifier --e2e-test`.
 
-Install uv, then clone the repository and create an isolated runtime environment:
-
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    uv venv ~/.local/share/auckland-bin-notifier/venv
-    uv pip install --python ~/.local/share/auckland-bin-notifier/venv/bin/python /path/to/auckland-bin-notifier
-    mkdir -p ~/.local/bin
-    ln -sf ~/.local/share/auckland-bin-notifier/venv/bin/auckland-bin-notifier ~/.local/bin/auckland-bin-notifier
-
-For development:
-
-    uv venv .venv
-    uv pip install --python .venv/bin/python -e '.[test]'
-    .venv/bin/pytest -q
-
-## Configure the collection source
-
-Create the private configuration directory:
-
-    mkdir -p ~/.config/auckland-bin-notifier
-    cp config.env.example ~/.config/auckland-bin-notifier/config.env
-    chmod 600 ~/.config/auckland-bin-notifier/config.env
-
-Set either AUCKLAND_BIN_PROPERTY_ID or AUCKLAND_BIN_ICS_URL.
-
-The property ID is the 11-digit identifier in the URL of the property-specific Auckland Council collection page after you search for your address on the Council website.
-
-For local development, a .env file in the current working directory is also supported and is gitignored.
-
-## Configure Matrix
-
-Copy the Matrix example:
-
-    cp matrix.env.example ~/.config/auckland-bin-notifier/matrix.env
-    chmod 600 ~/.config/auckland-bin-notifier/matrix.env
-
-Set MATRIX_ROOM_ID plus one Matrix transport:
-
-- Direct Client API: set MATRIX_HOMESERVER and MATRIX_ACCESS_TOKEN. This is appropriate for unencrypted rooms.
-- Direct encrypted SDK (recommended): run `auckland-bin-matrix-login` once on Nox to create a **separate Matrix device** with its own encryption store. The systemd units automatically load the resulting private `matrix-sdk.env` file, and future sends use `matrix-nio` without MCP. It prompts for your Matrix password just once; only the resulting device token is saved, with file permissions `0600`.
-- Existing Matrix MCP (compatibility): configure `MATRIX_MCP_URL` to its Streamable HTTP endpoint. This remains active until the dedicated SDK device is provisioned.
-- Direct Client API: `MATRIX_HOMESERVER` and `MATRIX_ACCESS_TOKEN`, intended for unencrypted rooms.
-
-For encrypted rooms where the sending Matrix session has unverified devices, you can set `MATRIX_IGNORE_UNVERIFIED_DEVICES=true` for the notifier. The SDK transport checks that the room is encrypted before sending and requires a confirmed event ID. Never copy the live MCP client's device ID, access token *and* Olm store into an independently running client: two concurrent processes cannot safely share a Matrix encryption identity.  Messages remain encrypted, but Matrix will share encryption keys with unverified devices, which is a security tradeoff. The default remains strict.
-
-To create the independent SDK session on the Nox installation:
-
-    cd ~/auckland-bin-notifier
-    uv run auckland-bin-matrix-login
-
-It creates `~/.config/auckland-bin-notifier/matrix-sdk.env` and a private store under `~/.local/state/auckland-bin-notifier/matrix-sdk`. Both scheduled services read the SDK configuration when present; they otherwise retain the proven legacy sending route. Run `auckland-bin-notifier --e2e-test` after provisioning to validate actual encrypted delivery, without consuming a scheduled reminder.
-
-Never commit an access token.
-
-## Test
-
-Check the configured live source without sending a message:
-
-    auckland-bin-notifier --dry-run
-
-Provision a dedicated private encrypted test room (no invitations, avatar included), using the SDK session configured above:
-
-    python -m auckland_bin_notifier.matrix_test_room
-
-This records the separate `MATRIX_E2E_TEST_ROOM_ID` in your private `config.env`; it never changes `MATRIX_ROOM_ID`, which remains the production destination. The command is safe to re-run against that configured room.
-
-Run the full live source -> parser -> Matrix path without changing reminder state:
-
-    auckland-bin-notifier --e2e-test
-
-**Tests fail closed** if the dedicated room is unset or equals the production room. Test messages are sent only to the private lab room and never suppress the real scheduled reminder. The room must be encrypted, and membership is verified to contain only the configured account at provisioning time.
-
-You can also check a specific date:
-
-    auckland-bin-notifier --date 2026-09-29 --dry-run
-
-## systemd
-
-Install the user units:
-
-    mkdir -p ~/.config/systemd/user
-    cp systemd/auckland-bin-notifier.service ~/.config/systemd/user/
-    cp systemd/auckland-bin-notifier.timer ~/.config/systemd/user/
-    cp systemd/auckland-bin-notifier-catchup.* ~/.config/systemd/user/
-    systemctl --user daemon-reload
-    systemctl --user enable --now auckland-bin-notifier.timer auckland-bin-notifier-catchup.timer
-
-The evening timer checks tomorrow at 7:00, 7:10 and 7:25 PM Pacific/Auckland; only the first successful send is delivered. The catch-up timer checks today at 7:30 AM and only sends when the previous evening's message was missed. Both are persistent across reboots.
-
-Inspect it with:
-
-    systemctl --user status auckland-bin-notifier.timer
-    systemctl --user list-timers auckland-bin-notifier.timer
-    journalctl --user -u auckland-bin-notifier.service
-
-## Data-source behavior
-
-The notifier can consume a direct iCalendar feed. When using an Auckland Council property ID, it fetches the public property-specific collection page. If that page exposes an ICS/webcal link, the calendar is used; otherwise the live household collection cards are parsed.
-
-The Auckland Council website is an external dependency and its HTML/API behavior may change. Parser failures are surfaced as errors instead of silently reporting an empty schedule.
-
-## Privacy
-
-Personal addresses, property IDs, Matrix room IDs, homeserver credentials, and access tokens belong only in local configuration. The supplied examples contain placeholders, and the repository ignores common local configuration/secrets files.
-
-## License
-
-MIT. See LICENSE.
+MIT licensed. See [LICENSE](LICENSE).
