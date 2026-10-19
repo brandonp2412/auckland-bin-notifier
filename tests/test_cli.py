@@ -80,6 +80,11 @@ def test_sdk_credentials_override_legacy_when_provisioned(monkeypatch, tmp_path:
 
     import os
 
+    assert "MATRIX_TRANSPORT" not in os.environ
+    assert os.environ["MATRIX_ACCESS_TOKEN"] == "old-mcp-token"
+    assert os.environ["MATRIX_ROOM_ID"] == "!bins:example.org"
+
+    load_default_env(use_sdk=True)
     assert os.environ["MATRIX_TRANSPORT"] == "nio"
     assert os.environ["MATRIX_DEVICE_ID"] == "SDKDEVICE"
     assert os.environ["MATRIX_ACCESS_TOKEN"] == "new-sdk-token"

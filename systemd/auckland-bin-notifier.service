@@ -7,7 +7,6 @@ After=network-online.target
 Type=oneshot
 EnvironmentFile=%h/.config/auckland-bin-notifier/matrix.env
 EnvironmentFile=%h/.config/auckland-bin-notifier/config.env
-EnvironmentFile=-%h/.config/auckland-bin-notifier/matrix-sdk.env
 ExecStart=%h/.local/bin/auckland-bin-notifier
 NoNewPrivileges=true
 PrivateTmp=true

@@ -89,29 +89,15 @@ def _fetch_with_retries(target: dt.date, attempts: int = 3) -> set[str]:
     raise last_error
 
 
-def _send_with_retries(
-    message: str, attempts: int = 3, *, room_id: str | None = None
-) -> None:
-    last_error: matrix.MatrixError | None = None
-    for attempt in range(attempts):
-        try:
-            if room_id is None:
-                matrix.send_message(message)
-            else:
-                matrix.send_message(message, room_id=room_id)
-            return
-        except matrix.MatrixError as exc:
-            last_error = exc
-            if attempt + 1 < attempts:
-                time.sleep(3 * (attempt + 1))
-    assert last_error is not None
-    raise last_error
+def _send_once(message: str, *, room_id: str | None = None) -> None:
+    if room_id is None:
+        matrix.send_message(message)
+    else:
+        matrix.send_message(message, room_id=room_id)
 
 
 def default_target_date() -> dt.date:
     today = dt.datetime.now(TIMEZONE).date()
-    if os.environ.get("AUCKLAND_BIN_CHECK_TODAY") == "1":
-        return today
     return today + dt.timedelta(days=1)
 
 
@@ -136,7 +122,7 @@ def run(target: dt.date | None = None, *, dry_run: bool = False) -> str:
         print(f"DRY RUN: {message}")
         return message
 
-    _send_with_retries(message)
+    _send_once(message)
     mark_sent(path, fingerprint)
     print(f"Sent Matrix notification: {message}")
     return message
@@ -169,6 +155,6 @@ def run_e2e(target: dt.date | None = None) -> str:
     if room_id == os.environ.get("MATRIX_ROOM_ID"):
         raise matrix.MatrixError("Test room must differ from the production room")
     message = e2e_message_for(kinds, target)
-    _send_with_retries(message, room_id=room_id)
+    _send_once(message, room_id=room_id)
     print(f"Sent E2E Matrix test to {room_id}: {message}")
     return message

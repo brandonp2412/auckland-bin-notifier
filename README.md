@@ -28,11 +28,11 @@ Set `MATRIX_ROOM_ID` in `matrix.env`. For encrypted rooms, run `auckland-bin-mat
 auckland-bin-notifier --dry-run
 cp systemd/*.service systemd/*.timer ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now auckland-bin-notifier.timer auckland-bin-notifier-catchup.timer
+systemctl --user enable --now auckland-bin-notifier.timer
 ```
 
-Checks at 7:00, 7:10 and 7:25 PM (Pacific/Auckland), with a 7:30 AM catch-up if the reminder was missed. Duplicate reminders are suppressed; food scraps are excluded.
+Checks once at 7:00 PM (Pacific/Auckland), with no retry or catch-up delivery. Duplicate reminders are suppressed; food scraps are excluded.
 
-For a live Matrix test without affecting reminders, provision a separate encrypted test room with `uv run python -m auckland_bin_notifier.matrix_test_room`, then run `auckland-bin-notifier --e2e-test`.
+For a live Matrix test without affecting reminders, set `MATRIX_E2E_TEST_ROOM_ID` in `config.env` to a room accessible to the dedicated SDK account in `matrix-sdk.env`, then run `auckland-bin-notifier --e2e-test`. E2E runs use the dedicated account while production uses `matrix.env`.
 
 MIT licensed. See [LICENSE](LICENSE).

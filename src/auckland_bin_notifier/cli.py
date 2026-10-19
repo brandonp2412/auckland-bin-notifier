@@ -29,7 +29,7 @@ def load_env_file(path: Path, *, override: bool = False) -> None:
             os.environ.setdefault(name, parsed)
 
 
-def load_default_env() -> None:
+def load_default_env(*, use_sdk: bool = False) -> None:
     config_dir = Path.home() / ".config/auckland-bin-notifier"
     for path in (
         Path.cwd() / ".env",
@@ -37,13 +37,14 @@ def load_default_env() -> None:
         config_dir / "config.env",
     ):
         load_env_file(path)
-    # The dedicated SDK device takes priority over legacy MCP credentials
-    # for both interactive CLI commands and systemd-initiated jobs.
-    load_env_file(config_dir / "matrix-sdk.env", override=True)
+    if use_sdk:
+        production_room = os.environ.get("MATRIX_ROOM_ID")
+        load_env_file(config_dir / "matrix-sdk.env", override=True)
+        if production_room:
+            os.environ["MATRIX_ROOM_ID"] = production_room
 
 
 def main(argv: list[str] | None = None) -> int:
-    load_default_env()
     parser = argparse.ArgumentParser(
         description="Notify Matrix when Auckland Council rubbish/recycling is due."
     )
@@ -57,6 +58,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--property-id", help="Override AUCKLAND_BIN_PROPERTY_ID for this run")
     parser.add_argument("--ics-url", help="Override AUCKLAND_BIN_ICS_URL for this run")
     args = parser.parse_args(argv)
+    load_default_env(use_sdk=args.e2e_test)
 
     if args.property_id:
         os.environ["AUCKLAND_BIN_PROPERTY_ID"] = args.property_id
