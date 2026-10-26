@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from . import matrix
+from . import beszel_dm, matrix
 from .sources import (
     SourceError,
     collection_types_from_ics_url,
@@ -113,7 +113,10 @@ def run(target: dt.date | None = None, *, dry_run: bool = False) -> str:
     message = message_for(kinds, target)
     fingerprint = f"{target.isoformat()}:{','.join(sorted(kinds))}"
     path = state_path()
-    if was_sent(path, fingerprint):
+    dm_env = os.environ.get("AUCKLAND_BIN_DM_ENV", "").strip()
+    group_sent = was_sent(path, fingerprint)
+    dm_sent = bool(dm_env) and was_sent(path, fingerprint, recipient="dm")
+    if group_sent and (not dm_env or dm_sent):
         result = f"Already notified: {message}"
         print(result)
         return result
@@ -122,9 +125,29 @@ def run(target: dt.date | None = None, *, dry_run: bool = False) -> str:
         print(f"DRY RUN: {message}")
         return message
 
-    _send_once(message)
-    mark_sent(path, fingerprint)
-    print(f"Sent Matrix notification: {message}")
+    failures = []
+    if not group_sent:
+        try:
+            _send_once(message)
+            mark_sent(path, fingerprint)
+        except (matrix.MatrixError, OSError) as exc:
+            failures.append(f"group: {exc}")
+
+    if dm_env and not dm_sent:
+        try:
+            beszel_dm.send_message(
+                message,
+                config_path=Path(dm_env).expanduser(),
+                expected_user=os.environ["AUCKLAND_BIN_DM_USER_ID"],
+                expected_room=os.environ["AUCKLAND_BIN_DM_ROOM_ID"],
+            )
+            mark_sent(path, fingerprint, recipient="dm")
+        except (KeyError, matrix.MatrixError, OSError) as exc:
+            failures.append(f"Beszel DM: {exc}")
+
+    if failures:
+        raise matrix.MatrixError("; ".join(failures))
+    print(f"Sent Matrix reminder to configured destinations: {message}")
     return message
 
 

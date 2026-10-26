@@ -33,6 +33,8 @@ systemctl --user enable --now auckland-bin-notifier.timer
 
 Checks once at 7:00 PM (Pacific/Auckland), with no retry or catch-up delivery. Duplicate reminders are suppressed; food scraps are excluded.
 
+Optional encrypted personal DM: set AUCKLAND_BIN_DM_ENV to the bot SDK credential file, plus AUCKLAND_BIN_DM_USER_ID and AUCKLAND_BIN_DM_ROOM_ID to its verified sender and private room. Group and DM sends are independently deduplicated.
+
 For a live Matrix test without affecting reminders, set `MATRIX_E2E_TEST_ROOM_ID` in `config.env` to a room accessible to the dedicated SDK account in `matrix-sdk.env`, then run `auckland-bin-notifier --e2e-test`. E2E runs use the dedicated account while production uses `matrix.env`.
 
 MIT licensed. See [LICENSE](LICENSE).

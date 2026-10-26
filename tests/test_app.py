@@ -84,3 +84,87 @@ def test_e2e_refuses_production_or_missing_room(monkeypatch):
     monkeypatch.setenv("MATRIX_E2E_TEST_ROOM_ID", "!production:matrix.example.org")
     with pytest.raises(app.matrix.MatrixError, match="must differ"):
         app.run_e2e(dt.date(2030, 1, 2))
+
+
+def test_group_and_beszel_dm_send_once_each(monkeypatch, tmp_path):
+    target = dt.date(2030, 1, 2)
+    calls = []
+    monkeypatch.setenv("AUCKLAND_BIN_DM_ENV", "/secure/beszel.env")
+    monkeypatch.setenv("AUCKLAND_BIN_DM_USER_ID", "@beszel:matrix.example.org")
+    monkeypatch.setenv("AUCKLAND_BIN_DM_ROOM_ID", "!dm:matrix.example.org")
+    monkeypatch.setattr(app, "_fetch_with_retries", lambda _date: {"rubbish"})
+    monkeypatch.setattr(app, "state_path", lambda: tmp_path / "state.json")
+    monkeypatch.setattr(app, "_send_once", lambda msg: calls.append(("group", msg)))
+    monkeypatch.setattr(
+        app.beszel_dm, "send_message",
+        lambda msg, **kwargs: calls.append(("dm", msg, kwargs["expected_user"], kwargs["expected_room"])),
+    )
+
+    app.run(target)
+    app.run(target)
+
+    assert len(calls) == 2
+    assert calls[0][0] == "group"
+    assert calls[1][0] == "dm"
+    assert calls[1][2:] == ("@beszel:matrix.example.org", "!dm:matrix.example.org")
+    from auckland_bin_notifier.state import was_sent
+    assert was_sent(tmp_path / "state.json", "2030-01-02:rubbish")
+    assert was_sent(tmp_path / "state.json", "2030-01-02:rubbish", recipient="dm")
+
+
+def test_dm_failure_does_not_duplicate_group(monkeypatch, tmp_path):
+    import pytest
+
+    target = dt.date(2030, 1, 2)
+    calls = []
+    monkeypatch.setenv("AUCKLAND_BIN_DM_ENV", "/secure/beszel.env")
+    monkeypatch.setenv("AUCKLAND_BIN_DM_USER_ID", "@beszel:matrix.example.org")
+    monkeypatch.setenv("AUCKLAND_BIN_DM_ROOM_ID", "!dm:matrix.example.org")
+    monkeypatch.setattr(app, "_fetch_with_retries", lambda _date: {"recycling"})
+    monkeypatch.setattr(app, "state_path", lambda: tmp_path / "state.json")
+    monkeypatch.setattr(app, "_send_once", lambda msg: calls.append("group"))
+
+    def dm_send(*args, **kwargs):
+        calls.append("dm")
+        if calls.count("dm") == 1:
+            raise app.matrix.MatrixError("temporarily unavailable")
+
+    monkeypatch.setattr(app.beszel_dm, "send_message", dm_send)
+    with pytest.raises(app.matrix.MatrixError, match="Beszel DM"):
+        app.run(target)
+    app.run(target)
+    assert calls == ["group", "dm", "dm"]
+
+
+def test_group_failure_still_delivers_dm(monkeypatch, tmp_path):
+    import pytest
+
+    target = dt.date(2030, 1, 2)
+    calls = []
+    monkeypatch.setenv("AUCKLAND_BIN_DM_ENV", "/secure/beszel.env")
+    monkeypatch.setenv("AUCKLAND_BIN_DM_USER_ID", "@beszel:matrix.example.org")
+    monkeypatch.setenv("AUCKLAND_BIN_DM_ROOM_ID", "!dm:matrix.example.org")
+    monkeypatch.setattr(app, "_fetch_with_retries", lambda _date: {"rubbish"})
+    monkeypatch.setattr(app, "state_path", lambda: tmp_path / "state.json")
+
+    def group_send(message):
+        calls.append("group")
+        if calls.count("group") == 1:
+            raise app.matrix.MatrixError("temporarily unavailable")
+
+    monkeypatch.setattr(app, "_send_once", group_send)
+    monkeypatch.setattr(app.beszel_dm, "send_message", lambda *a, **kw: calls.append("dm"))
+    with pytest.raises(app.matrix.MatrixError, match="group"):
+        app.run(target)
+    app.run(target)
+    assert calls == ["group", "dm", "group"]
+
+
+def test_dual_destination_dry_run_does_not_send(monkeypatch, tmp_path):
+    monkeypatch.setenv("AUCKLAND_BIN_DM_ENV", "/secure/beszel.env")
+    monkeypatch.setattr(app, "_fetch_with_retries", lambda _date: {"rubbish"})
+    monkeypatch.setattr(app, "state_path", lambda: tmp_path / "state.json")
+    monkeypatch.setattr(app, "_send_once", lambda *a: (_ for _ in ()).throw(AssertionError("sent")))
+    monkeypatch.setattr(app.beszel_dm, "send_message", lambda *a, **k: (_ for _ in ()).throw(AssertionError("sent")))
+    app.run(dt.date(2030, 1, 2), dry_run=True)
+    assert not (tmp_path / "state.json").exists()
