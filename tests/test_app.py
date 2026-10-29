@@ -92,12 +92,13 @@ def test_group_and_beszel_dm_send_once_each(monkeypatch, tmp_path):
     monkeypatch.setenv("AUCKLAND_BIN_DM_ENV", "/secure/beszel.env")
     monkeypatch.setenv("AUCKLAND_BIN_DM_USER_ID", "@beszel:matrix.example.org")
     monkeypatch.setenv("AUCKLAND_BIN_DM_ROOM_ID", "!dm:matrix.example.org")
+    monkeypatch.setenv("AUCKLAND_BIN_DM_IGNORE_UNVERIFIED_DEVICES", "true")
     monkeypatch.setattr(app, "_fetch_with_retries", lambda _date: {"rubbish"})
     monkeypatch.setattr(app, "state_path", lambda: tmp_path / "state.json")
     monkeypatch.setattr(app, "_send_once", lambda msg: calls.append(("group", msg)))
     monkeypatch.setattr(
         app.beszel_dm, "send_message",
-        lambda msg, **kwargs: calls.append(("dm", msg, kwargs["expected_user"], kwargs["expected_room"])),
+        lambda msg, **kwargs: calls.append(("dm", msg, kwargs["expected_user"], kwargs["expected_room"], kwargs["allow_unverified"])),
     )
 
     app.run(target)
@@ -106,7 +107,7 @@ def test_group_and_beszel_dm_send_once_each(monkeypatch, tmp_path):
     assert len(calls) == 2
     assert calls[0][0] == "group"
     assert calls[1][0] == "dm"
-    assert calls[1][2:] == ("@beszel:matrix.example.org", "!dm:matrix.example.org")
+    assert calls[1][2:] == ("@beszel:matrix.example.org", "!dm:matrix.example.org", True)
     from auckland_bin_notifier.state import was_sent
     assert was_sent(tmp_path / "state.json", "2030-01-02:rubbish")
     assert was_sent(tmp_path / "state.json", "2030-01-02:rubbish", recipient="dm")

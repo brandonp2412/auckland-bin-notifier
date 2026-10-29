@@ -22,13 +22,14 @@ dependencies = [
   "beautifulsoup4>=4.13,<5",
   "curl-cffi>=0.13,<1",
   "icalendar>=6,<8",
+  "mcp>=2,<3",
   "matrix-nio[e2e]>=0.25,<1",
   "recurring-ical-events>=3,<4",
   "ty>=0.0.84",
 ]
 
 [project.optional-dependencies]
-matrix-mcp = ["mcp>=2,<3"]
+matrix-mcp = []  # Backward-compatible extra; MCP is required by production sending.
 test = ["pytest>=8,<10"]
 
 [project.scripts]

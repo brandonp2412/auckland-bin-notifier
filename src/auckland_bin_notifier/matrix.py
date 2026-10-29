@@ -27,15 +27,15 @@ def _send_via_mcp(body: str, room_id: str, mcp_url: str, timeout: float) -> None
     allow_unverified = os.environ.get("MATRIX_IGNORE_UNVERIFIED_DEVICES", "").lower() in ("1", "true", "yes")
 
     async def _send():
-        async with (
-            streamable_http_client(mcp_url) as (read, write),
-            ClientSession(read, write) as session,
-        ):
-            await session.initialize()
-            arguments = {"room_id": room_id, "body": body}
-            if allow_unverified:
-                arguments["ignore_unverified_devices"] = True
-            return await session.call_tool("send_message", arguments)
+        # MCP SDK versions yield either (read, write) or (read, write, session_id).
+        async with streamable_http_client(mcp_url) as streams:
+            read, write = streams[:2]
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                arguments = {"room_id": room_id, "body": body}
+                if allow_unverified:
+                    arguments["ignore_unverified_devices"] = True
+                return await session.call_tool("send_message", arguments)
 
     try:
         result = asyncio.run(asyncio.wait_for(_send(), timeout=timeout))

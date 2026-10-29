@@ -34,6 +34,15 @@ def test_beszel_sdk_uses_verified_account_and_room(monkeypatch, tmp_path):
     assert seen["room_id"] == "!dm:matrix.example.org"
     assert not seen["allow_unverified"]
 
+    beszel_dm.send_message(
+        "Bins tomorrow",
+        config_path=env,
+        expected_user="@beszel:matrix.example.org",
+        expected_room="!dm:matrix.example.org",
+        allow_unverified=True,
+    )
+    assert seen["allow_unverified"]
+
 
 def test_beszel_refuses_wrong_target(monkeypatch, tmp_path):
     env = tmp_path / "beszel.env"

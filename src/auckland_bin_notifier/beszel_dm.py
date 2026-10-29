@@ -30,6 +30,7 @@ def send_message(
     config_path: Path,
     expected_user: str,
     expected_room: str,
+    allow_unverified: bool | None = None,
 ) -> None:
     config = _load_config(config_path)
     if config.get("MATRIX_TRANSPORT") != "nio":
@@ -50,9 +51,12 @@ def send_message(
                     device_id=config["MATRIX_DEVICE_ID"],
                     access_token=config["MATRIX_ACCESS_TOKEN"],
                     store_path=Path(config["MATRIX_SDK_STORE_PATH"]).expanduser(),
-                    allow_unverified=config.get(
-                        "MATRIX_IGNORE_UNVERIFIED_DEVICES", ""
-                    ).casefold() in {"1", "true", "yes"},
+                    allow_unverified=(
+                        allow_unverified
+                        if allow_unverified is not None
+                        else config.get("MATRIX_IGNORE_UNVERIFIED_DEVICES", "")
+                        .casefold() in {"1", "true", "yes"}
+                    ),
                 ),
                 timeout=30.0,
             )

@@ -257,14 +257,12 @@ dependencies = [
     { name = "curl-cffi" },
     { name = "icalendar" },
     { name = "matrix-nio", extra = ["e2e"] },
+    { name = "mcp" },
     { name = "recurring-ical-events" },
     { name = "ty" },
 ]
 
 [package.optional-dependencies]
-matrix-mcp = [
-    { name = "mcp" },
-]
 test = [
     { name = "pytest" },
 ]
@@ -280,7 +278,7 @@ requires-dist = [
     { name = "curl-cffi", specifier = ">=0.13,<1" },
     { name = "icalendar", specifier = ">=6,<8" },
     { name = "matrix-nio", extras = ["e2e"], specifier = ">=0.25,<1" },
-    { name = "mcp", marker = "extra == 'matrix-mcp'", specifier = ">=2,<3" },
+    { name = "mcp", specifier = ">=2,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8,<10" },
     { name = "recurring-ical-events", specifier = ">=3,<4" },
     { name = "ty", specifier = ">=0.0.84" },

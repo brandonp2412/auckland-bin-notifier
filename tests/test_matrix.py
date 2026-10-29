@@ -103,10 +103,11 @@ def test_mcp_tool_error_survives_transport_cleanup(monkeypatch):
         )
 
 
-def test_mcp_requires_confirmed_event_and_explicit_opt_in(monkeypatch):
+@pytest.mark.parametrize("stream_count", [2, 3])
+def test_mcp_requires_confirmed_event_and_explicit_opt_in(monkeypatch, stream_count):
     class FakeTransport:
         async def __aenter__(self):
-            return object(), object()
+            return tuple(object() for _ in range(stream_count))
 
         async def __aexit__(self, exc_type, exc, traceback):
             return False

@@ -140,6 +140,9 @@ def run(target: dt.date | None = None, *, dry_run: bool = False) -> str:
                 config_path=Path(dm_env).expanduser(),
                 expected_user=os.environ["AUCKLAND_BIN_DM_USER_ID"],
                 expected_room=os.environ["AUCKLAND_BIN_DM_ROOM_ID"],
+                allow_unverified=os.environ.get(
+                    "AUCKLAND_BIN_DM_IGNORE_UNVERIFIED_DEVICES", ""
+                ).casefold() in {"1", "true", "yes"},
             )
             mark_sent(path, fingerprint, recipient="dm")
         except (KeyError, matrix.MatrixError, OSError) as exc:
