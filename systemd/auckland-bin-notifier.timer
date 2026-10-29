@@ -2,7 +2,7 @@
 Description=Check tomorrow's Auckland Council bin collection each evening
 
 [Timer]
-OnCalendar=*-*-* 19:00:00 Pacific/Auckland
+OnCalendar=*-*-* 17:30:00 Pacific/Auckland
 AccuracySec=1min
 
 [Install]
